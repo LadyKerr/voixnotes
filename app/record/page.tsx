@@ -9,6 +9,7 @@ import { useRecorder } from "@/hooks/useRecorder";
 import { useSpeechRecognition } from "@/hooks/useSpeechRecognition";
 import { useNotes } from "@/hooks/useNotes";
 import { AlertCircle, Loader2 } from "lucide-react";
+import Image from "next/image";
 
 export default function RecordPage() {
   const { user } = useUser();
@@ -115,7 +116,10 @@ export default function RecordPage() {
       {/* Header */}
       <header className="sticky top-0 z-10 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="max-w-xl mx-auto px-4 py-3 flex items-center justify-between">
-          <h1 className="text-xl font-semibold">Voixnotes ({notes.length})</h1>
+          <div className="flex items-center gap-2">
+            <Image src="/logo.svg" alt="Voixnotes logo" width={28} height={28} />
+            <h1 className="text-xl font-semibold">Voixnotes ({notes.length})</h1>
+          </div>
           <UserButton />
         </div>
       </header>

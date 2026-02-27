@@ -27,6 +27,10 @@ export const metadata: Metadata = {
   title: "Voixnotes",
   description: "Record voice notes and get instant transcriptions",
   manifest: "/manifest.json",
+  icons: {
+    icon: "/logo.svg",
+    apple: "/logo.svg",
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",

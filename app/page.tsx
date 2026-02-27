@@ -1,4 +1,5 @@
 import { Mic, FileText, Sparkles } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 
 export default function Home() {
@@ -7,7 +8,7 @@ export default function Home() {
       {/* Hero */}
       <div className="flex-1 flex flex-col items-center justify-center px-4 py-16 text-center">
         <div className="rounded-full bg-primary/10 p-4 mb-6">
-          <Mic className="h-10 w-10 text-primary" />
+          <Image src="/logo.svg" alt="Voixnotes logo" width={48} height={48} />
         </div>
         <h1 className="text-4xl font-bold tracking-tight sm:text-5xl">Voixnotes</h1>
         <p className="mt-3 text-lg text-muted-foreground max-w-md">
