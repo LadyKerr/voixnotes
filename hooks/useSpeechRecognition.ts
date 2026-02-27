@@ -93,12 +93,18 @@ export function useSpeechRecognition(): UseSpeechRecognitionReturn {
 
     recognition.onend = () => {
       // Auto-restart if still supposed to be listening
+      // On Android, continuous mode often stops after each phrase;
+      // a small delay before restarting prevents rapid fail loops
       if (recognitionRef.current) {
-        try {
-          recognition.start();
-        } catch {
-          setIsListening(false);
-        }
+        setTimeout(() => {
+          if (recognitionRef.current) {
+            try {
+              recognition.start();
+            } catch {
+              setIsListening(false);
+            }
+          }
+        }, 300);
       }
     };
 

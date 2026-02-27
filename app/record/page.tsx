@@ -50,10 +50,14 @@ export default function RecordPage() {
     try {
       setError(null);
       resetTranscript();
-      await startRecording();
+      // Start speech recognition FIRST — on Android, the first consumer
+      // of the mic gets priority. Transcription is the core feature.
       if (isSupported) {
         startListening();
       }
+      // Small delay to let speech recognition claim the mic before MediaRecorder
+      await new Promise((r) => setTimeout(r, 500));
+      await startRecording();
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Could not access microphone.";
       setError(msg + " Please allow microphone access and try again.");
