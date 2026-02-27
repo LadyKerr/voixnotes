@@ -5,29 +5,32 @@ import { useState, useRef, useCallback } from "react";
 interface UseRecorderReturn {
   isRecording: boolean;
   duration: number;
-  startRecording: () => Promise<void>;
+  mimeType: string;
+  startRecording: (onChunk?: (chunk: Blob) => void) => Promise<void>;
   stopRecording: () => Promise<{ audioBlob: Blob | null; duration: number }>;
 }
 
 export function useRecorder(): UseRecorderReturn {
   const [isRecording, setIsRecording] = useState(false);
   const [duration, setDuration] = useState(0);
+  const [mimeType, setMimeType] = useState("");
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const startTimeRef = useRef<number>(0);
+  const onChunkRef = useRef<((chunk: Blob) => void) | null>(null);
 
-  const startRecording = useCallback(async () => {
+  const startRecording = useCallback(async (onChunk?: (chunk: Blob) => void) => {
     try {
-      // Check if mediaDevices API is available (requires HTTPS)
+      onChunkRef.current = onChunk ?? null;
+
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
         throw new Error(
           "Media devices not available. Make sure you're using HTTPS and a supported browser."
         );
       }
 
-      // Explicitly request mic permission first
       if (navigator.permissions) {
         try {
           const permResult = await navigator.permissions.query({ name: "microphone" as PermissionName });
@@ -50,24 +53,27 @@ export function useRecorder(): UseRecorderReturn {
       });
 
       // Pick a supported MIME type (Android Chrome may not support all)
-      const mimeType = [
+      const selectedMime = [
         "audio/webm;codecs=opus",
         "audio/webm",
         "audio/mp4",
         "audio/ogg;codecs=opus",
       ].find((type) => MediaRecorder.isTypeSupported(type)) || "";
 
-      const mediaRecorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
+      setMimeType(selectedMime);
+
+      const mediaRecorder = new MediaRecorder(stream, selectedMime ? { mimeType: selectedMime } : undefined);
       mediaRecorderRef.current = mediaRecorder;
       chunksRef.current = [];
 
       mediaRecorder.ondataavailable = (e) => {
         if (e.data.size > 0) {
           chunksRef.current.push(e.data);
+          onChunkRef.current?.(e.data);
         }
       };
 
-      mediaRecorder.start(1000); // collect data every second for Android compatibility
+      mediaRecorder.start(250); // 250ms chunks for smooth streaming
       startTimeRef.current = Date.now();
       setIsRecording(true);
       setDuration(0);
@@ -112,5 +118,5 @@ export function useRecorder(): UseRecorderReturn {
     });
   }, []);
 
-  return { isRecording, duration, startRecording, stopRecording };
+  return { isRecording, duration, mimeType, startRecording, stopRecording };
 }
