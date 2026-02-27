@@ -6,7 +6,7 @@ export const proxy = clerkMiddleware(async (auth, request) => {
     await auth.protect();
   }
 }, {
-  authorizedParties: ["https://voixnotes.com", "https://accounts.voixnotes.com"],
+  authorizedParties: ["https://voixnotes.com"],
 });
 
 export const config = {
