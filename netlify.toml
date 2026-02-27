@@ -6,3 +6,6 @@
   for = "/*"
   [headers.values]
     Permissions-Policy = "microphone=(self)"
+
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
