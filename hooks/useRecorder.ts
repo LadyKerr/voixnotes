@@ -21,7 +21,16 @@ export function useRecorder(): UseRecorderReturn {
   const startRecording = useCallback(async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mediaRecorder = new MediaRecorder(stream);
+
+      // Pick a supported MIME type (Android Chrome may not support all)
+      const mimeType = [
+        "audio/webm;codecs=opus",
+        "audio/webm",
+        "audio/mp4",
+        "audio/ogg;codecs=opus",
+      ].find((type) => MediaRecorder.isTypeSupported(type)) || "";
+
+      const mediaRecorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
       mediaRecorderRef.current = mediaRecorder;
       chunksRef.current = [];
 
@@ -31,7 +40,7 @@ export function useRecorder(): UseRecorderReturn {
         }
       };
 
-      mediaRecorder.start();
+      mediaRecorder.start(1000); // collect data every second for Android compatibility
       startTimeRef.current = Date.now();
       setIsRecording(true);
       setDuration(0);
@@ -61,7 +70,8 @@ export function useRecorder(): UseRecorderReturn {
       const finalDuration = Math.floor((Date.now() - startTimeRef.current) / 1000);
 
       mediaRecorder.onstop = () => {
-        const blob = new Blob(chunksRef.current, { type: "audio/webm" });
+        const type = mediaRecorder.mimeType || "audio/webm";
+        const blob = new Blob(chunksRef.current, { type });
         setIsRecording(false);
         setDuration(finalDuration);
 
