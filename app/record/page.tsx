@@ -13,6 +13,16 @@ import Image from "next/image";
 
 export default function RecordPage() {
   const { user } = useUser();
+
+  // Cache userId in localStorage so notes load instantly on refresh
+  const [cachedUserId] = useState<string | null>(() =>
+    typeof window !== "undefined" ? localStorage.getItem("voixnotes_uid") : null
+  );
+  useEffect(() => {
+    if (user?.id) localStorage.setItem("voixnotes_uid", user.id);
+  }, [user?.id]);
+  const userId = user?.id ?? cachedUserId;
+
   const { isRecording, duration, startRecording, stopRecording } = useRecorder();
   const {
     transcript,
@@ -23,7 +33,7 @@ export default function RecordPage() {
     stopListening,
     resetTranscript,
   } = useSpeechRecognition();
-  const { notes, isLoading, addNote, deleteNote, updateNote } = useNotes(user?.id);
+  const { notes, isLoading, addNote, deleteNote, updateNote } = useNotes(userId);
   const [error, setError] = useState<string | null>(null);
 
   const handleSummarize = async (id: string) => {
@@ -131,7 +141,14 @@ export default function RecordPage() {
 
       {/* Notes list */}
       <main className="flex-1 max-w-xl mx-auto w-full px-4 py-4 pb-48">
-        {!isSupported && (
+        {isSupported === null && (
+          <div className="flex items-center justify-center gap-2 rounded-lg border border-muted bg-muted/30 p-3 mb-4 text-sm text-muted-foreground">
+            <Image src="/logo.svg" alt="Loading" width={20} height={20} className="animate-pulse" />
+            <p>Initializing…</p>
+          </div>
+        )}
+
+        {isSupported === false && (
           <div className="flex items-center gap-2 rounded-lg border border-yellow-500/50 bg-yellow-500/10 p-3 mb-4 text-sm">
             <AlertCircle className="h-4 w-4 text-yellow-500 shrink-0" />
             <p>

@@ -1,7 +1,7 @@
 import { Note } from "@/types/note";
 
 export async function getNotes(): Promise<Note[]> {
-  const res = await fetch("/api/notes");
+  const res = await fetch("/api/notes", { cache: "no-store" });
   if (!res.ok) {
     console.error("Failed to fetch notes:", res.status);
     return [];

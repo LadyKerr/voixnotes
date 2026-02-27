@@ -20,10 +20,7 @@ export function useNotes(userId: string | null | undefined) {
   }, [userId]);
 
   useEffect(() => {
-    if (!userId) {
-      setIsLoading(false);
-      return;
-    }
+    if (!userId) return;
     setIsLoading(true);
     refresh().finally(() => setIsLoading(false));
   }, [userId, refresh]);
@@ -32,10 +29,12 @@ export function useNotes(userId: string | null | undefined) {
     async (transcript: string, audioBlob: Blob | null, duration: number) => {
       if (!userId) return null;
       const saved = await saveNote(transcript, audioBlob, duration);
-      await refresh();
+      if (saved) {
+        setNotes((prev) => [saved, ...prev]);
+      }
       return saved;
     },
-    [userId, refresh]
+    [userId]
   );
 
   const deleteNote = useCallback(

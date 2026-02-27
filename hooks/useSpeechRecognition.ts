@@ -34,7 +34,7 @@ interface UseSpeechRecognitionReturn {
   transcript: string;
   interimTranscript: string;
   isListening: boolean;
-  isSupported: boolean;
+  isSupported: boolean | null;
   startListening: () => void;
   stopListening: () => void;
   resetTranscript: () => void;
@@ -44,7 +44,7 @@ export function useSpeechRecognition(): UseSpeechRecognitionReturn {
   const [transcript, setTranscript] = useState("");
   const [interimTranscript, setInterimTranscript] = useState("");
   const [isListening, setIsListening] = useState(false);
-  const [isSupported, setIsSupported] = useState(false);
+  const [isSupported, setIsSupported] = useState<boolean | null>(null);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const transcriptRef = useRef("");
 
