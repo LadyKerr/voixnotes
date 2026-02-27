@@ -54,8 +54,9 @@ export default function RecordPage() {
       if (isSupported) {
         startListening();
       }
-    } catch {
-      setError("Could not access microphone. Please allow microphone access.");
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Could not access microphone.";
+      setError(msg + " Please allow microphone access and try again.");
     }
   };
 

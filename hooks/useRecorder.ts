@@ -20,7 +20,34 @@ export function useRecorder(): UseRecorderReturn {
 
   const startRecording = useCallback(async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      // Check if mediaDevices API is available (requires HTTPS)
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        throw new Error(
+          "Media devices not available. Make sure you're using HTTPS and a supported browser."
+        );
+      }
+
+      // Explicitly request mic permission first
+      if (navigator.permissions) {
+        try {
+          const permResult = await navigator.permissions.query({ name: "microphone" as PermissionName });
+          if (permResult.state === "denied") {
+            throw new Error(
+              "Microphone permission is denied. Please enable it in your browser/device settings."
+            );
+          }
+        } catch {
+          // permissions.query may not support 'microphone' on all browsers — continue anyway
+        }
+      }
+
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true,
+        },
+      });
 
       // Pick a supported MIME type (Android Chrome may not support all)
       const mimeType = [
@@ -50,7 +77,7 @@ export function useRecorder(): UseRecorderReturn {
       }, 1000);
     } catch (err) {
       console.error("Failed to start recording:", err);
-      throw err;
+      throw err instanceof Error ? err : new Error(String(err));
     }
   }, []);
 
