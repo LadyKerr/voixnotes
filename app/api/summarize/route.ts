@@ -24,7 +24,9 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const client = new CopilotClient();
+    const client = new CopilotClient({
+      githubToken: process.env.GITHUB_TOKEN,
+    });
     await client.start();
 
     const session = await client.createSession({ model: "gpt-4.1" });
@@ -50,9 +52,16 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ summary });
   } catch (error) {
     console.error("Summarize error:", error);
+    const message = error instanceof Error ? error.message : "";
+    const isAuthError = message.includes("auth") || message.includes("token") || message.includes("401") || message.includes("403");
     return NextResponse.json(
-      { error: "Failed to generate summary" },
-      { status: 500 }
+      {
+        error: isAuthError
+          ? "Summarization is temporarily unavailable. Please try again later."
+          : "Failed to generate summary",
+        code: isAuthError ? "AUTH_ERROR" : "INTERNAL_ERROR",
+      },
+      { status: isAuthError ? 503 : 500 }
     );
   }
 }

@@ -36,7 +36,8 @@ export default function RecordPage() {
     });
 
     if (!res.ok) {
-      setError("Failed to generate summary. Is the Copilot SDK configured?");
+      const body = await res.json().catch(() => null);
+      setError(body?.error || "Failed to generate summary");
       return;
     }
 
