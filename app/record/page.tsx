@@ -6,7 +6,7 @@ import { RecordButton } from "@/components/RecordButton";
 import { TranscriptDisplay } from "@/components/TranscriptDisplay";
 import { NotesList } from "@/components/NotesList";
 import { useRecorder } from "@/hooks/useRecorder";
-import { useSpeechRecognition } from "@/hooks/useSpeechRecognition";
+import { useTranscription } from "@/hooks/useTranscription";
 import { useNotes } from "@/hooks/useNotes";
 import { AlertCircle, Loader2 } from "lucide-react";
 import Image from "next/image";
@@ -28,11 +28,11 @@ export default function RecordPage() {
     transcript,
     interimTranscript,
     isListening,
-    isSupported,
     startListening,
     stopListening,
     resetTranscript,
-  } = useSpeechRecognition();
+    onAudioChunk,
+  } = useTranscription();
   const { notes, isLoading, addNote, deleteNote, updateNote } = useNotes(userId);
   const [error, setError] = useState<string | null>(null);
 
@@ -60,14 +60,9 @@ export default function RecordPage() {
     try {
       setError(null);
       resetTranscript();
-      // Start speech recognition FIRST — on Android, the first consumer
-      // of the mic gets priority. Transcription is the core feature.
-      if (isSupported) {
-        startListening();
-      }
-      // Small delay to let speech recognition claim the mic before MediaRecorder
-      await new Promise((r) => setTimeout(r, 500));
-      await startRecording();
+      // Start Deepgram transcription and recording together
+      await startListening();
+      await startRecording(onAudioChunk);
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Could not access microphone.";
       setError(msg + " Please allow microphone access and try again.");
@@ -141,22 +136,6 @@ export default function RecordPage() {
 
       {/* Notes list */}
       <main className="flex-1 max-w-xl mx-auto w-full px-4 py-4 pb-48">
-        {isSupported === null && (
-          <div className="flex items-center justify-center gap-2 rounded-lg border border-muted bg-muted/30 p-3 mb-4 text-sm text-muted-foreground">
-            <Image src="/logo.svg" alt="Loading" width={20} height={20} className="animate-pulse" />
-            <p>Initializing…</p>
-          </div>
-        )}
-
-        {isSupported === false && (
-          <div className="flex items-center gap-2 rounded-lg border border-yellow-500/50 bg-yellow-500/10 p-3 mb-4 text-sm">
-            <AlertCircle className="h-4 w-4 text-yellow-500 shrink-0" />
-            <p>
-              Speech recognition is not supported in your browser. Try Chrome or Edge for live transcription.
-            </p>
-          </div>
-        )}
-
         {error && (
           <div className="flex items-center gap-2 rounded-lg border border-red-500/50 bg-red-500/10 p-3 mb-4 text-sm">
             <AlertCircle className="h-4 w-4 text-red-500 shrink-0" />

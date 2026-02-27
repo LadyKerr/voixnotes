@@ -53,10 +53,11 @@ export async function POST(req: NextRequest) {
   let audioPath: string | null = null;
 
   if (audioFile && audioFile.size > 0) {
-    const fileName = `${userId}/${crypto.randomUUID()}.webm`;
+    const ext = audioFile.type.includes("mp4") ? "mp4" : "webm";
+    const fileName = `${userId}/${crypto.randomUUID()}.${ext}`;
     const { error: uploadError } = await supabaseAdmin.storage
       .from("audio")
-      .upload(fileName, audioFile, { contentType: "audio/webm" });
+      .upload(fileName, audioFile, { contentType: audioFile.type || "audio/webm" });
 
     if (uploadError) {
       console.error("Failed to upload audio:", uploadError.message);
